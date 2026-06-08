@@ -1,41 +1,39 @@
-const ALLOWED_ORIGIN = "https://wk98-killertings-projects.vercel.app";
-
 // Simple in-memory rate limiter: max 5 requests per IP per minute
 const rateLimitMap = new Map();
 
 function isRateLimited(ip) {
   const now = Date.now();
-  const windowMs = 60 * 1000; // 1 minute
+  const windowMs = 60 * 1000;
   const maxRequests = 5;
-
-  if (!rateLimitMap.has(ip)) {
-    rateLimitMap.set(ip, []);
-  }
-
+  if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, []);
   const timestamps = rateLimitMap.get(ip).filter(t => now - t < windowMs);
   timestamps.push(now);
   rateLimitMap.set(ip, timestamps);
-
   return timestamps.length > maxRequests;
 }
 
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  return origin.endsWith(".vercel.app") || origin.endsWith("killerting.github.io");
+}
+
 export default async function handler(req, res) {
-  // CORS — only allow requests from our own domain
-  const origin = req.headers.origin;
-  if (origin !== ALLOWED_ORIGIN) {
+  const origin = req.headers.origin || "*";
+
+  if (!isAllowedOrigin(req.headers.origin)) {
     return res.status(403).json({ error: "Forbidden" });
   }
-  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-  res.setHeader("Access-Control-Allow-Methods", "POST");
+
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  // Rate limiting
-  const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress;
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket?.remoteAddress || "unknown";
   if (isRateLimited(ip)) {
-    return res.status(429).json({ error: "Too many requests. Please wait a minute." });
+    return res.status(429).json({ error: "Demasiadas solicitudes. Espera un minuto." });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -60,18 +58,19 @@ Use the most recent figures available from onpe.gob.pe or major Peruvian news so
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 200,
+        max_tokens: 300,
         tools: [{ type: "web_search_20250305", name: "web_search" }],
         messages: [{ role: "user", content: prompt }]
       })
     });
 
     const data = await response.json();
+    if (data.error) return res.status(500).json({ error: data.error.message });
     const text = data.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
     const clean = text.replace(/```json|```/g, "").trim();
     const start = clean.indexOf("{");
     const end = clean.lastIndexOf("}");
-    if (start === -1 || end === -1) throw new Error("No JSON found in response");
+    if (start === -1 || end === -1) throw new Error("No JSON in response: " + text.slice(0, 100));
     const parsed = JSON.parse(clean.slice(start, end + 1));
     return res.status(200).json(parsed);
   } catch (e) {
