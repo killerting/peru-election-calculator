@@ -1,3 +1,8 @@
+// Server-side cache: shared across all users for 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
+let cachedResult = null;
+let cacheTimestamp = 0;
+
 // Simple in-memory rate limiter: max 5 requests per IP per minute
 const rateLimitMap = new Map();
 
@@ -30,6 +35,11 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  // Return cached result if still fresh
+  if (cachedResult && Date.now() - cacheTimestamp < CACHE_TTL) {
+    return res.status(200).json({ ...cachedResult, cached: true });
+  }
 
   const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket?.remoteAddress || "unknown";
   if (isRateLimited(ip)) {
@@ -72,6 +82,8 @@ Use the most recent figures available from onpe.gob.pe or major Peruvian news so
     const end = clean.lastIndexOf("}");
     if (start === -1 || end === -1) throw new Error("No JSON in response: " + text.slice(0, 100));
     const parsed = JSON.parse(clean.slice(start, end + 1));
+    cachedResult = parsed;
+    cacheTimestamp = Date.now();
     return res.status(200).json(parsed);
   } catch (e) {
     return res.status(500).json({ error: e.message });

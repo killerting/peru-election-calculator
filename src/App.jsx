@@ -3,8 +3,6 @@ import { useState, useEffect, useCallback } from "react";
 const fmt = (n) => Math.round(n).toLocaleString("es-PE");
 const pct = (n, d) => d > 0 ? ((n / d) * 100).toFixed(2) : "0.00";
 
-const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
-
 async function fetchLiveData() {
   const response = await fetch("/api/fetch-results", {
     method: "POST",
@@ -23,8 +21,6 @@ export default function ElectionCalculator() {
   const [result, setResult] = useState(null);
   const [liveStatus, setLiveStatus] = useState("idle"); // idle | loading | success | error
   const [lastFetched, setLastFetched] = useState(null);
-  const [autoRefresh, setAutoRefresh] = useState(false);
-  const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
     const vA = parseFloat(String(candidateA.votes).replace(/,/g, "")) || 0;
@@ -66,20 +62,8 @@ export default function ElectionCalculator() {
     }
   }, []);
 
-  // Auto-refresh countdown
-  useEffect(() => {
-    if (!autoRefresh) { setCountdown(0); return; }
-    setCountdown(REFRESH_INTERVAL / 1000);
-    const interval = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) { fetchData(); return REFRESH_INTERVAL / 1000; }
-        return c - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [autoRefresh, fetchData]);
-
-  const toggleAuto = () => setAutoRefresh(a => !a);
+  // Auto-fetch once on mount
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   return (
     <div style={{ fontFamily: "'Georgia', serif", minHeight: "100vh", background: "#0a0a0f", color: "white" }}>
@@ -111,16 +95,11 @@ export default function ElectionCalculator() {
           <div style={{ flex: 1, minWidth: 160 }}>
             <div style={{ fontSize: "0.6rem", letterSpacing: "0.2em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase", marginBottom: "0.2rem" }}>Datos en vivo · ONPE</div>
             <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>
-              {liveStatus === "idle" && "Presiona actualizar para cargar datos"}
+              {liveStatus === "idle" && "Cargando datos..."}
               {liveStatus === "loading" && <span style={{ color: "#c89a30" }}>⏳ Buscando datos...</span>}
               {liveStatus === "success" && <span style={{ color: "#22c55e" }}>✓ Actualizado {lastFetched && `a las ${lastFetched}`}</span>}
               {liveStatus === "error" && <span style={{ color: "#ef4444" }}>✗ Error al obtener datos</span>}
             </div>
-            {autoRefresh && countdown > 0 && (
-              <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.25)", marginTop: "0.2rem" }}>
-                Próxima actualización en {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, "0")}
-              </div>
-            )}
           </div>
 
           <button onClick={fetchData} disabled={liveStatus === "loading"} style={{
@@ -132,15 +111,6 @@ export default function ElectionCalculator() {
             🔄 Actualizar
           </button>
 
-          <button onClick={toggleAuto} style={{
-            background: autoRefresh ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.04)",
-            border: `1px solid ${autoRefresh ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.1)"}`,
-            color: autoRefresh ? "#22c55e" : "rgba(255,255,255,0.4)",
-            borderRadius: 8, padding: "0.5rem 1rem", cursor: "pointer",
-            fontSize: "0.8rem", fontFamily: "Georgia, serif", transition: "all 0.2s"
-          }}>
-            {autoRefresh ? "⏸ Pausar auto" : "▶ Auto (5 min)"}
-          </button>
         </div>
 
         {/* Input Grid */}
@@ -245,9 +215,9 @@ export default function ElectionCalculator() {
           </div>
         )}
 
-        {!result && liveStatus !== "loading" && (
+        {!result && liveStatus === "error" && (
           <div style={{ textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: "0.9rem", padding: "3rem 0" }}>
-            Presiona "Actualizar" para cargar los datos en vivo, o ingresa los valores manualmente
+            No se pudieron cargar los datos. Presiona "Actualizar" para reintentar, o ingresa los valores manualmente.
           </div>
         )}
 
