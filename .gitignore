@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Environment variables — never commit secrets
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Build output
+dist/
+build/
+
+# Vite
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
