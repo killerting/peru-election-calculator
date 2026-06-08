@@ -1,4 +1,4 @@
-const ALLOWED_ORIGIN = "https://peru-election-calculator.vercel.app";
+const ALLOWED_ORIGIN = "https://wk98-killertings-projects.vercel.app";
 
 // Simple in-memory rate limiter: max 5 requests per IP per minute
 const rateLimitMap = new Map();
