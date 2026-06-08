@@ -6,35 +6,13 @@ const pct = (n, d) => d > 0 ? ((n / d) * 100).toFixed(2) : "0.00";
 const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 async function fetchLiveData() {
-  const prompt = `Search the web for the latest official ONPE results for Peru's 2026 presidential second round (segunda vuelta) between Keiko Fujimori and Roberto Sánchez. Return ONLY a JSON object with these exact fields, no other text:
-{
-  "fujimori_votes": <integer>,
-  "sanchez_votes": <integer>,
-  "pct_counted": <float>,
-  "last_updated": "<HH:MM time string>"
-}
-Use the most recent figures available from onpe.gob.pe or major Peruvian news sources. If the election is over and 100% counted, use those final numbers.`;
-
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("Missing VITE_ANTHROPIC_API_KEY environment variable");
-
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("/api/fetch-results", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 200,
-      tools: [{ type: "web_search_20250305", name: "web_search" }],
-      messages: [{ role: "user", content: prompt }]
-    })
+    headers: { "Content-Type": "application/json" }
   });
-  const data = await response.json();
-  const text = data.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
-  const clean = text.replace(/```json|```/g, "").trim();
-  const start = clean.indexOf("{");
-  const end = clean.lastIndexOf("}");
-  if (start === -1 || end === -1) throw new Error("No JSON found");
-  return JSON.parse(clean.slice(start, end + 1));
+  if (response.status === 429) throw new Error("Demasiadas solicitudes. Espera un minuto.");
+  if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
+  return await response.json();
 }
 
 export default function ElectionCalculator() {
