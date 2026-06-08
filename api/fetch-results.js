@@ -64,18 +64,19 @@ Use the most recent figures available from onpe.gob.pe or major Peruvian news so
       headers: {
         "Content-Type": "application/json",
         "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
+        "anthropic-version": "2023-06-01",
+        "anthropic-beta": "web-search-2025-03-05"
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 300,
+        model: "claude-sonnet-4-5",
+        max_tokens: 1024,
         tools: [{ type: "web_search_20250305", name: "web_search" }],
         messages: [{ role: "user", content: prompt }]
       })
     });
 
     const data = await response.json();
-    if (data.error) return res.status(500).json({ error: data.error.message });
+    if (data.error) return res.status(500).json({ error: data.error.message, detail: data.error });
     const text = data.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
     const clean = text.replace(/```json|```/g, "").trim();
     const start = clean.indexOf("{");
