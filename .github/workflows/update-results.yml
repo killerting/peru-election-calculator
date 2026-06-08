@@ -1,0 +1,19 @@
+name: Update Election Results
+
+on:
+  schedule:
+    - cron: "*/20 * * * *"  # Every 20 minutes
+  workflow_dispatch:          # Allow manual trigger from GitHub UI
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger update endpoint
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.VERCEL_APP_URL }}/api/update-results" \
+            | tee response.json
+          cat response.json
