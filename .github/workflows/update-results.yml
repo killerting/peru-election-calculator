@@ -2,7 +2,8 @@ name: Update Election Results
 
 on:
   schedule:
-    - cron: "*/20 * * * *"  # Every 20 minutes
+    - cron: "*/20 13-23 * * *"  # Every 20 min, 8am–6pm Peru time (UTC-5 = 13:00–23:00 UTC)
+    - cron: "*/20 0-5 * * *"    # Every 20 min, 7pm–midnight Peru time (00:00–05:00 UTC)
   workflow_dispatch:          # Allow manual trigger from GitHub UI
 
 jobs:
