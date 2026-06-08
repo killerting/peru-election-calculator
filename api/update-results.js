@@ -53,8 +53,8 @@ Use the most recent figures available from onpe.gob.pe or major Peruvian news so
     const parsed = JSON.parse(clean.slice(start, end + 1));
 
     const redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
     });
 
     await redis.set(CACHE_KEY, parsed);
