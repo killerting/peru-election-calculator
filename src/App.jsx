@@ -239,7 +239,7 @@ export default function ElectionCalculator() {
         <div style={{ marginTop: "1rem", padding: "1rem 1.2rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10 }}>
           <div style={{ fontSize: "0.62rem", letterSpacing: "0.2em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase", marginBottom: "0.4rem" }}>Fuente de datos</div>
           <p style={{ margin: 0, fontSize: "0.78rem", color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-            Los datos se obtienen mediante búsqueda web en tiempo real a través de la API de Claude (Anthropic), consultando fuentes periodísticas peruanas que replican los resultados oficiales de ONPE. Los números pueden diferir ligeramente de los datos oficiales por latencia en la publicación. Esta herramienta es de uso informativo únicamente.
+            Los datos se obtienen mediante búsqueda web en tiempo real, consultando fuentes periodísticas peruanas que replican los resultados oficiales de ONPE. Los números pueden diferir ligeramente de los datos oficiales por latencia en la publicación. Esta herramienta es de uso informativo únicamente.
           </p>
         </div>
 
