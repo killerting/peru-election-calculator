@@ -135,8 +135,8 @@ export default function ElectionCalculator() {
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-              <FinalCard name={result.leader.name} votes={result.finalLeader} isWinner={!result.trailerWins} color="#c89a30" />
-              <FinalCard name={result.trailer.name} votes={result.finalTrailer} isWinner={result.trailerWins} color="#4a90d9" />
+              <FinalCard name={result.leader.name} votes={result.finalLeader} total={result.finalLeader + result.finalTrailer} isWinner={!result.trailerWins} color="#c89a30" />
+              <FinalCard name={result.trailer.name} votes={result.finalTrailer} total={result.finalLeader + result.finalTrailer} isWinner={result.trailerWins} color="#4a90d9" />
             </div>
             {result.trailerWins ? (
               <Alert color="#4a90d9" icon="🔄">Con ese reparto, <strong>{result.trailer.name} remonta y gana</strong> por <strong>{fmt(result.finalTrailer - result.finalLeader)} votos</strong>.</Alert>
@@ -280,12 +280,14 @@ function Stat({ label, value }) {
     </div>
   );
 }
-function FinalCard({ name, votes, isWinner, color }) {
+function FinalCard({ name, votes, total, isWinner, color }) {
+  const simPct = total > 0 ? ((votes / total) * 100).toFixed(2) : "0.00";
   return (
     <div style={{ padding: "1.2rem", borderRadius: 10, textAlign: "center", background: isWinner ? `${color}18` : "rgba(255,255,255,0.03)", border: `1px solid ${isWinner ? color + "44" : "rgba(255,255,255,0.06)"}`, transition: "all 0.3s" }}>
       {isWinner && <div style={{ fontSize: "0.6rem", letterSpacing: "0.2em", color, marginBottom: "0.4rem", textTransform: "uppercase" }}>Ganador proyectado</div>}
       <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.5rem" }}>{name}</div>
-      <div style={{ fontFamily: "monospace", fontSize: "1.5rem", color: isWinner ? color : "white" }}>{Math.round(votes).toLocaleString("es-PE")}</div>
+      <div style={{ fontFamily: "monospace", fontSize: "2rem", color: isWinner ? color : "white", lineHeight: 1 }}>{simPct}%</div>
+      <div style={{ fontFamily: "monospace", fontSize: "0.9rem", color: "rgba(255,255,255,0.35)", marginTop: "0.4rem" }}>{Math.round(votes).toLocaleString("es-PE")}</div>
     </div>
   );
 }
