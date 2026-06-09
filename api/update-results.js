@@ -16,14 +16,18 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: "API key not configured" });
 
   try {
-    const prompt = `Search the web for the latest official ONPE results for Peru's 2026 presidential second round (segunda vuelta) between Keiko Fujimori and Roberto Sánchez. Return ONLY a JSON object with these exact fields, no other text:
+    const prompt = `Search the web for the latest official ONPE results for Peru's 2026 presidential second round (segunda vuelta) between Keiko Fujimori and Roberto Sánchez.
+
+IMPORTANT: Return the FULL vote counts as complete integers — do NOT round or abbreviate (e.g. use 8829215, NOT 8829 or 8.8M or 883500). Both candidates have received several million votes each.
+
+Return ONLY a JSON object with these exact fields, no other text:
 {
-  "fujimori_votes": <integer>,
-  "sanchez_votes": <integer>,
-  "pct_counted": <float>,
+  "fujimori_votes": <full integer, e.g. 8829215>,
+  "sanchez_votes": <full integer, e.g. 8865215>,
+  "pct_counted": <float, e.g. 95.23>,
   "last_updated": "<HH:MM time string>"
 }
-Use the most recent figures available from onpe.gob.pe or major Peruvian news sources. If the election is over and 100% counted, use those final numbers.`;
+Use the most recent figures available from onpe.gob.pe or major Peruvian news sources.`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
